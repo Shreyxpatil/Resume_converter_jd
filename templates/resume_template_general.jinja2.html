@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Resume - {{ name }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f0f0f0; color: #000000; }
+        .resume-container { max-width: 900px; margin: auto; background-color: #ffffff; border: 1px solid #000; }
+        .header { padding: 25px 40px; }
+        .logo { width: 300px; }
+
+        .resume-table { width: 100%; border-collapse: collapse; }
+        .resume-table td { border: 1px solid #000000; padding: 8px 15px; vertical-align: top; font-size: 16px; }
+
+        .left-col { background-color: #0d3d62; color: #ffffff; font-weight: bold; width: 25%; }
+        .right-col { background-color: #ffffff; color: #000000; line-height: 1.5; width: 75%; }
+
+        /* NO UNDERLINE */
+        .section-title { font-weight: bold; font-size: 18px; margin-top: 15px; margin-bottom: 5px; text-decoration: none; }
+
+        .skill-item { margin-bottom: 5px; }
+
+        .project-title-bar { background-color: #0d3d62; color: white; padding: 10px 15px; font-size: 18px; font-weight: bold; border: 1px solid black; border-top: none; }
+        .projects-table td { border-top: none; }
+
+        .project-heading { font-weight: bold; font-size: 17px; margin-bottom: 5px; }
+        .role-heading { font-weight: bold; font-size: 16px; margin-bottom: 3px; }
+        .duration-heading { font-weight: bold; font-size: 16px; margin-bottom: 5px; }
+        .techstack { margin-top: 10px; }
+
+        ul { padding-left: 20px; margin: 0; }
+        li { margin-bottom: 5px; }
+    </style>
+</head>
+<body>
+    {#- Hook classes / data-* attributes below (name, skill-line, entry-block,
+        entry-title, data-section-id, data-add-label) are read by the app's ATS,
+        keyword and section-editor features — see templates/README.md. They don't
+        change how this template looks. #}
+    <div class="resume-container" data-template="general">
+        <div class="header">
+            <img src="download.png" alt="Logo" class="logo">
+        </div>
+
+        <table class="resume-table">
+            <tbody>
+                <tr>
+                    <td class="left-col">Name</td>
+                    <td class="right-col"><strong class="name">{{ name }}</strong></td>
+                </tr>
+                <tr>
+                    <td class="left-col">Current Job Role</td>
+                    <td class="right-col" data-section-id="field_job_role">{{ job_role }}</td>
+                </tr>
+                <tr>
+                    <td class="left-col">Experience</td>
+                    <td class="right-col" data-section-id="field_experience">{{ experience }}</td>
+                </tr>
+                <tr>
+                    <td class="left-col">Expertise</td>
+                    <td class="right-col">
+                        {% set skill_ns = namespace(i=0) %}
+                        {% for category in expertise %}
+                        <div class="expertise-category" data-section-id="expertise_{{ loop.index0 }}">
+                            <div class="section-title">{{ category.category_name }}</div>
+                            <div class="skill-list">
+                                {% for skill in category.skills %}
+                                <div class="skill-item skill-line" data-section-id="skill_{{ skill_ns.i }}"><strong>{{ skill.area }}:</strong> {{ skill.technologies }}</div>
+                                {% set skill_ns.i = skill_ns.i + 1 %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </td>
+                </tr>
+                <tr>
+                    <td class="left-col">Development Tool</td>
+                    <td class="right-col" data-section-id="field_development_tools">{{ development_tools }}</td>
+                </tr>
+                <tr>
+                    <td class="left-col">Database</td>
+                    <td class="right-col" data-section-id="field_databases">{{ databases }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="project-title-bar">Projects Descriptions:</div>
+
+        <table class="resume-table projects-table">
+            <tbody>
+                {% for project in projects %}
+                <tr class="entry-block" data-section-id="work_experience_{{ loop.index0 }}" data-add-label="Project">
+                    <td class="left-col">Project {{ loop.index }}</td>
+                    <td class="right-col">
+                         <div class="project-heading">Project : <span class="entry-title">{{ project.title }}</span></div>
+                         <div class="role-heading"><strong>Role:</strong> {{ project.role }}</div>
+                         <div class="duration-heading"><strong>Duration:</strong> {{ project.duration }}</div>
+
+                         {% if project.link %}
+                            <div>Link- <a href="{{ project.link }}">{{ project.link }}</a></div>
+                         {% endif %}
+
+                         {% if project.description %}
+                            <ul>
+                            {% for desc in project.description %}
+                                <li>{{ desc }}</li>
+                            {% endfor %}
+                            </ul>
+                         {% endif %}
+
+                         <div class="techstack">
+                            <strong>Techstack used:</strong><br>
+                            {{ project.tech_stack }}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

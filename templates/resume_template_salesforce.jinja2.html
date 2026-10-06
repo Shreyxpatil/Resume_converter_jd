@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Resume - {{ name }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #ffffff; color: #000000; }
+        .resume-table { width: 100%; border-collapse: collapse; }
+        .resume-table td { border: 1px solid #000000; padding: 8px 15px; vertical-align: middle; font-size: 14px; }
+
+        /* Updated Left Column for Main Table */
+        .left-col { background-color: #1c4587; color: #ffffff; font-weight: bold; width: 25%; text-align: left; }
+
+        /* Name/Role/Experience should be centered in the Right Column */
+        .right-col { background-color: #ffffff; color: #000000; text-align: center; }
+
+        /* Standard items like skills should be centered too (per user request) */
+        .right-col-standard { background-color: #ffffff; color: #000000; text-align: center; }
+
+        /* Preview of the DOCX header: certification badges (left) + company logo (right) */
+        .sf-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 4px 16px; }
+        .sf-cert-logos img { height: 80px; margin-right: 10px; }
+        .sf-company-logo { width: 240px; }
+
+        .project-title-bar { background-color: #1c4587; color: white; padding: 10px 15px; font-size: 16px; font-weight: bold; text-align: left; margin-top: 15px; }
+        .project-title-bar-text-only { display: none; } /* Used by python parser to grab text */
+
+        .projects-table { width: 100%; border-collapse: collapse; margin-top: 5px; }
+        .projects-table td { border: 1px solid #000000; padding: 10px; vertical-align: top; }
+
+        .project-name-col { background-color: #ffffff; width: 25%; font-weight: bold; font-style: italic; text-align: center; vertical-align: middle; }
+        .project-details-col { background-color: #ffffff; text-align: left; }
+
+        .role-heading { font-weight: bold; margin-bottom: 3px; }
+        .duration-heading { font-weight: bold; margin-bottom: 5px; }
+
+        ul { margin-top: 5px; margin-bottom: 5px; padding-left: 20px; }
+        li { margin-bottom: 3px; }
+    </style>
+</head>
+<body>
+    {#- Hook classes / data-* attributes below (name, skill-line, entry-block,
+        entry-title, data-section-id, data-add-label) are read by the app's ATS,
+        keyword and section-editor features — see templates/README.md. They don't
+        change how this template looks. #}
+    <div class="resume-container" data-template="salesforce">
+    <div style="display:none;" class="name-value-cell">{{ name }}</div>
+
+    <div class="sf-header">
+        <div class="sf-cert-logos">{% for image in badges %}<img src="certificates_badges/{{ image }}" alt="">{% endfor %}</div>
+        <img src="download.png" alt="Company logo" class="sf-company-logo">
+    </div>
+
+    <table class="resume-table">
+        <tbody>
+            <tr>
+                <td class="left-col">Name</td>
+                <td class="right-col"><strong class="name">{{ name }}</strong></td>
+            </tr>
+            <tr>
+                <td class="left-col">Current Job Role</td>
+                <td class="right-col" data-section-id="field_job_role">{{ job_role }}</td>
+            </tr>
+            <tr>
+                <td class="left-col">Experience</td>
+                <td class="right-col" data-section-id="field_experience">{{ experience }}</td>
+            </tr>
+            <tr>
+                <td class="left-col">CRM Administration</td>
+                <td class="right-col-standard skill-line" data-section-id="field_crm_administration">{{ crm_administration }}</td>
+            </tr>
+            <tr>
+                <td class="left-col">Certifications</td>
+                <td class="right-col-standard" data-section-id="field_certifications">{{ certifications }}</td>
+            </tr>
+            <tr>
+                <td class="left-col">Salesforce Expertise</td>
+                <td class="right-col-standard skill-line" data-section-id="field_salesforce_expertise">{{ salesforce_expertise }}</td>
+            </tr>
+            <tr>
+                <td class="left-col">Languages</td>
+                <td class="right-col-standard skill-line" data-section-id="field_languages">{{ languages }}</td>
+            </tr>
+            <tr>
+                <td class="left-col">Salesforce Components</td>
+                <td class="right-col-standard skill-line" data-section-id="field_salesforce_components">{{ salesforce_components }}</td>
+            </tr>
+            <tr>
+                <td class="left-col">Ticketing & Case Management</td>
+                <td class="right-col-standard skill-line" data-section-id="field_ticketing">{{ ticketing }}</td>
+            </tr>
+            <tr>
+                <td class="left-col">Database</td>
+                <td class="right-col-standard skill-line" data-section-id="field_database">{{ database }}</td>
+            </tr>
+             <tr>
+                <td class="left-col">Salesforce Clouds</td>
+                <td class="right-col-standard skill-line" data-section-id="field_salesforce_clouds">{{ salesforce_clouds }}</td>
+            </tr>
+             <tr>
+                <td class="left-col">Soft Skills</td>
+                <td class="right-col-standard" data-section-id="field_soft_skills">{{ soft_skills }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="project-title-bar-text-only">PROJECTS DETAILS:</div>
+    <div class="project-title-bar">PROJECTS DETAILS:</div>
+
+    <table class="projects-table">
+<tbody>
+{% for project in projects %}
+<tr class="entry-block" data-section-id="work_experience_{{ loop.index0 }}" data-add-label="Project">
+
+    <!-- LEFT COLUMN = PROJECT NAME -->
+    <td class="project-name-col entry-title">
+        {{ project.title }}
+    </td>
+
+    <!-- RIGHT COLUMN = DETAILS -->
+    <td class="project-details-col">
+
+        <div><strong>Role:</strong> {{ project.role }}</div>
+        <div><strong>Industry:</strong> {{ project.industry }}</div>
+        <div><strong>Duration:</strong> {{ project.duration }}</div>
+
+        <div style="margin-top:6px;">
+            <strong>Project Description & Key Responsibilities:</strong>
+        </div>
+
+        <ol>
+            {% for desc in project.description %}
+            <li>{{ desc }}</li>
+            {% endfor %}
+        </ol>
+
+    </td>
+
+</tr>
+{% endfor %}
+</tbody>
+</table>
+    </div>
+
+</body>
+</html>

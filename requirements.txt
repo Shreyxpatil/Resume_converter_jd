@@ -1,0 +1,21 @@
+# Pinned to the versions the app and its test suite were last verified with.
+
+# Web server
+fastapi==0.142.2
+uvicorn[standard]==0.54.0
+python-multipart==0.0.32
+pydantic==2.13.5
+
+# Resume parsing, templating and DOCX/PDF generation
+python-docx==1.2.0
+pypdf==6.19.0
+beautifulsoup4==4.15.0
+Jinja2==3.1.6
+
+# AI (Gemini, with Groq fallback over HTTP) and .env config
+google-genai==2.28.0
+requests==2.34.2
+python-dotenv==1.2.4
+
+# PDF export on Windows uses Word via COM (Linux/macOS use LibreOffice instead)
+pywin32; sys_platform == 'win32'

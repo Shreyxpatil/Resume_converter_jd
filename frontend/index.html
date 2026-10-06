@@ -1,0 +1,1584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resume Converter AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root { color-scheme: light; }
+        html, body { font-family: 'Inter', ui-sans-serif, system-ui, sans-serif; }
+
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        .fade-in { animation: fadeIn .45s cubic-bezier(.16,1,.3,1); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+        .slide-in-right { animation: slideInRight .5s cubic-bezier(.16,1,.3,1); }
+        @keyframes slideInRight { from { opacity: 0; transform: translateX(32px); } to { opacity: 1; transform: translateX(0); } }
+
+        .pop-in { animation: popIn .25s cubic-bezier(.16,1,.3,1); }
+        @keyframes popIn { from { opacity: 0; transform: scale(.96) translateY(4px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+
+        /* Toasts */
+        .toast-item { opacity: 0; transform: translateX(24px) scale(.96); transition: opacity .25s ease, transform .25s cubic-bezier(.16,1,.3,1); }
+        .toast-in { opacity: 1; transform: translateX(0) scale(1); }
+        .toast-out { opacity: 0; transform: translateX(24px) scale(.96); }
+
+        /* Upload dropzone accent ring on drag */
+        .drop-active { border-color: #6366f1 !important; background-color: #eef2ff !important; }
+
+        /* Custom checkbox accent */
+        input[type="checkbox"] { accent-color: #4f46e5; }
+
+
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800 antialiased">
+
+    <!-- TOASTS -->
+    <div id="toastContainer" class="fixed top-4 right-4 z-[100] flex flex-col gap-2 items-end pointer-events-none"></div>
+
+    <div id="pageWrapper" class="max-w-3xl mx-auto py-8 px-4 sm:px-6 transition-all duration-500 ease-in-out">
+
+        <div class="flex items-center justify-between mb-8 gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+                <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-600 flex items-center justify-center text-white shadow-lg shadow-indigo-600/25 shrink-0">
+                    <i class="fas fa-file-signature text-lg"></i>
+                </div>
+                <div class="min-w-0">
+                    <h1 class="text-xl font-extrabold text-slate-900 tracking-tight truncate">Resume Converter</h1>
+                    <p class="text-slate-400 text-xs font-medium truncate">AI-powered parsing, tailoring &amp; ATS formatting</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="workspaceGrid" class="grid grid-cols-1 gap-6 items-start transition-all duration-500">
+        <div id="leftPanel">
+
+        <button id="btnBackToForm" class="hidden mb-4 inline-flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-indigo-600 transition-colors">
+            <i class="fas fa-arrow-left"></i> Back to upload
+        </button>
+
+        <div id="jdDisplayContainer" class="hidden bg-white rounded-2xl shadow-sm border border-slate-200 p-6 mb-6">
+            <label class="block text-xs font-extrabold text-slate-400 uppercase tracking-wide mb-2">Job description used</label>
+            <div id="jdDisplayText" class="text-sm text-slate-600 whitespace-pre-wrap max-h-56 overflow-y-auto leading-relaxed"></div>
+        </div>
+
+        <div id="singleFormContainer" class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8 fade-in">
+            <form id="singleForm" class="space-y-7">
+
+                <div>
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="w-5 h-5 rounded-full bg-indigo-600 text-white text-[10px] font-black flex items-center justify-center shrink-0">1</span>
+                        <label class="text-xs font-extrabold text-slate-500 uppercase tracking-wide">Choose template</label>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <label class="cursor-pointer">
+                            <input type="radio" name="singleTemplate" value="general" class="peer sr-only" checked>
+                            <div class="flex items-center gap-3 p-3.5 rounded-xl border-2 border-slate-200 peer-checked:border-indigo-500 peer-checked:bg-indigo-50/60 hover:bg-slate-50 transition-all h-full">
+                                <div class="w-9 h-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0"><i class="fas fa-file-word"></i></div>
+                                <div class="text-left">
+                                    <div class="text-sm font-bold text-slate-800">General</div>
+                                    <div class="text-xs text-slate-400">Company table format: expertise, tools &amp; projects</div>
+                                </div>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="singleTemplate" value="salesforce" class="peer sr-only">
+                            <div class="flex items-center gap-3 p-3.5 rounded-xl border-2 border-slate-200 peer-checked:border-orange-500 peer-checked:bg-orange-50/60 hover:bg-slate-50 transition-all h-full">
+                                <div class="w-9 h-9 rounded-lg bg-orange-50 text-orange-500 flex items-center justify-center shrink-0"><i class="fab fa-salesforce"></i></div>
+                                <div class="text-left">
+                                    <div class="text-sm font-bold text-slate-800">Salesforce</div>
+                                    <div class="text-xs text-slate-400">Clouds, components &amp; certification badges</div>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="w-5 h-5 rounded-full bg-indigo-600 text-white text-[10px] font-black flex items-center justify-center shrink-0">2</span>
+                        <label class="text-xs font-extrabold text-slate-500 uppercase tracking-wide">Upload your resume</label>
+                    </div>
+                    <div id="dropZoneSingle" class="group border-2 border-dashed border-slate-200 rounded-2xl p-7 text-center hover:border-indigo-400 hover:bg-indigo-50/40 transition-colors cursor-pointer">
+                        <input type="file" id="fileInputSingle" class="hidden" accept=".pdf,.docx">
+                        <div class="w-11 h-11 mx-auto rounded-full bg-slate-100 group-hover:bg-indigo-100 flex items-center justify-center mb-3 transition-colors">
+                            <i class="fas fa-cloud-arrow-up text-lg text-slate-400 group-hover:text-indigo-600 transition-colors"></i>
+                        </div>
+                        <p class="text-sm font-semibold text-slate-600" id="fileNameSingle">Click to upload, or drag a PDF/DOCX here</p>
+                        <p class="text-xs text-slate-400 mt-1">Your existing resume — nothing here is fabricated, only reorganized</p>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2">
+                            <span class="w-5 h-5 rounded-full bg-indigo-600 text-white text-[10px] font-black flex items-center justify-center shrink-0">3</span>
+                            <label class="text-xs font-extrabold text-slate-500 uppercase tracking-wide">Job description <span class="text-slate-300 font-semibold normal-case">(optional)</span></label>
+                        </div>
+                        <label class="text-xs font-bold text-indigo-600 hover:text-indigo-800 cursor-pointer shrink-0 transition-colors">
+                            <i class="fas fa-paperclip"></i> Upload file
+                            <input type="file" id="jdFileSingle" class="hidden" accept=".txt,.docx,.pdf">
+                        </label>
+                    </div>
+                    <textarea id="jobDescriptionSingle" rows="4" placeholder="Paste the target job description here, or upload a .txt/.docx/.pdf file above..." class="w-full border border-slate-200 rounded-xl p-3.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-colors"></textarea>
+                    <p id="jdFileStatusSingle" class="hidden text-xs mt-1.5 font-medium"></p>
+                </div>
+
+                <div>
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="w-5 h-5 rounded-full bg-indigo-600 text-white text-[10px] font-black flex items-center justify-center shrink-0">4</span>
+                        <label class="text-xs font-extrabold text-slate-500 uppercase tracking-wide">Writing style <span class="text-slate-300 font-semibold normal-case">(optional)</span></label>
+                    </div>
+                    <div class="instruction-presets flex flex-wrap gap-2 mb-2.5" data-form="single"></div>
+                    <textarea id="extraInstructionsSingle" rows="2" placeholder="Any other instructions for how the resume should read..." class="w-full border border-slate-200 rounded-xl p-3.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-colors"></textarea>
+                </div>
+
+                <button type="submit" id="btnConvertSingle" class="w-full py-3.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-bold rounded-xl shadow-lg shadow-indigo-600/25 transition-all transform active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                    <i class="fas fa-wand-magic-sparkles"></i> Extract &amp; Preview
+                </button>
+            </form>
+        </div>
+
+        <!-- KEYWORD & ATS OPTIMIZER -->
+        <div id="insightsCard" class="hidden bg-white rounded-2xl shadow-sm border border-slate-200 mt-6 p-5 transition-all">
+                <div id="keywordPanel" class="hidden transition-all">
+                    <div class="flex items-center justify-between mb-4">
+                        <p class="text-xs text-slate-400 max-w-[60%]">Add, remove, or match keywords with the job description</p>
+                        <div id="kwMatchBadge" class="text-xs font-extrabold px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 shrink-0">
+                            <span id="kwMatchPercent">0%</span> match
+                        </div>
+                    </div>
+
+                    <!-- ATS Match Bar -->
+                    <div id="kwScoreSection" class="mb-4 bg-slate-50 p-3.5 rounded-xl border border-slate-100">
+                        <div class="flex items-center justify-between text-xs font-semibold text-slate-600 mb-1.5">
+                            <span class="flex items-center gap-1.5"><i class="fas fa-chart-pie text-indigo-500"></i> ATS keyword match <span class="font-normal text-slate-400 normal-case">(weighted by priority)</span></span>
+                            <span id="kwScoreRatio" class="font-bold text-slate-700">0 / 0 matched</span>
+                        </div>
+                        <div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
+                            <div id="kwScoreBar" class="bg-indigo-500 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Navigation Tabs -->
+                    <div class="flex border-b border-slate-200 mb-4 text-xs font-bold gap-1">
+                        <button type="button" id="tabBtnMatched" class="flex-1 py-2 text-center border-b-2 border-emerald-600 text-emerald-700 flex items-center justify-center gap-1.5 transition-colors">
+                            <i class="fas fa-check-circle"></i> Included (<span id="kwAddedCount">0</span>)
+                        </button>
+                        <button type="button" id="tabBtnMissing" class="flex-1 py-2 text-center border-b-2 border-transparent text-slate-400 hover:text-slate-600 flex items-center justify-center gap-1.5 transition-colors">
+                            <i class="fas fa-exclamation-circle"></i> Missing (<span id="kwMissingCount">0</span>)
+                        </button>
+                        <button type="button" id="tabBtnCustom" class="flex-1 py-2 text-center border-b-2 border-transparent text-slate-400 hover:text-slate-600 flex items-center justify-center gap-1.5 transition-colors">
+                            <i class="fas fa-plus-circle"></i> Add skill
+                        </button>
+                        <button type="button" id="tabBtnJd" class="py-2 px-2.5 text-center border-b-2 border-transparent text-slate-400 hover:text-slate-600 transition-colors" title="Job Description">
+                            <i class="fas fa-file-alt"></i>
+                        </button>
+                    </div>
+
+                    <!-- TAB 1: Matched / Included in Resume -->
+                    <div id="tabContentMatched" class="space-y-2">
+                        <div class="flex items-center justify-between text-xs text-slate-400 mb-1">
+                            <span>Click a keyword (or its <i class="fas fa-times text-red-500"></i>) to <strong class="text-slate-600">remove</strong> it from the resume:</span>
+                        </div>
+                        <div id="kwAddedList" class="flex flex-wrap gap-1.5 max-h-52 overflow-y-auto p-2 bg-slate-50 rounded-xl border border-slate-100 min-h-[50px]"></div>
+                    </div>
+
+                    <!-- TAB 2: Missing from Resume (From JD) -->
+                    <div id="tabContentMissing" class="hidden space-y-2">
+                        <div class="flex items-center justify-between text-xs text-slate-400 mb-1">
+                            <span>Click a missing keyword to <strong class="text-slate-600">add</strong> it to the resume:</span>
+                            <button type="button" id="kwAddAllMissingBtn" class="text-xs font-bold text-indigo-600 hover:underline shrink-0">Add all missing</button>
+                        </div>
+                        <div id="kwMissingList" class="flex flex-wrap gap-1.5 max-h-52 overflow-y-auto p-2 bg-slate-50 rounded-xl border border-slate-100 min-h-[50px]"></div>
+                    </div>
+
+                    <!-- TAB 3: Add Custom Keyword / Skill -->
+                    <div id="tabContentCustom" class="hidden space-y-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">Enter any keyword or skill to weave in</label>
+                            <div class="flex gap-2">
+                                <input id="kwCustomInput" type="text" placeholder="e.g. Docker, PyTorch, REST APIs..." class="flex-1 border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-colors">
+                                <button id="kwCustomAddBtn" type="button" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm transition-transform transform active:scale-95 shrink-0 flex items-center gap-1">
+                                    <i class="fas fa-plus"></i> Add
+                                </button>
+                            </div>
+                        </div>
+                        <div>
+                            <span class="text-xs text-slate-400 font-semibold block mb-1.5">Quick suggestions</span>
+                            <div id="kwSuggestions" class="flex flex-wrap gap-1"></div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1.5">Custom skills queued to weave in</label>
+                            <div id="kwCustomList" class="flex flex-wrap gap-1.5 min-h-[36px] p-2.5 bg-indigo-50/50 rounded-xl border border-indigo-100"></div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 4: Target Job Description (Analyze / Re-extract) -->
+                    <div id="tabContentJd" class="hidden space-y-3">
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide">Target job description</label>
+                        <textarea id="kwJdTextarea" rows="4" placeholder="Paste target job description here to analyze and extract missing keywords..." class="w-full border border-slate-200 rounded-xl p-3 text-xs resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-colors"></textarea>
+                        <button id="kwAnalyzeJdBtn" type="button" class="w-full py-2.5 bg-violet-600 hover:bg-violet-700 text-white font-bold rounded-xl text-xs shadow-sm transition-colors flex items-center justify-center gap-1.5">
+                            <i class="fas fa-wand-magic-sparkles"></i> Analyze &amp; extract JD keywords
+                        </button>
+                    </div>
+
+                    <!-- PENDING CHANGES SUMMARY & APPLY BUTTON -->
+                    <div class="mt-4 pt-3.5 border-t border-slate-200">
+                        <div id="kwPendingSummary" class="hidden mb-3 p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 flex items-center justify-between">
+                            <span id="kwPendingText" class="font-semibold"></span>
+                            <button id="kwResetChangesBtn" type="button" class="text-amber-700 hover:text-amber-900 font-bold underline ml-2 shrink-0">Reset</button>
+                        </div>
+                        <button id="btnMakeChanges" class="hidden w-full py-3 bg-violet-600 hover:bg-violet-700 text-white font-bold rounded-xl shadow-sm transition-transform transform active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2 text-sm">
+                            <i class="fas fa-wand-magic-sparkles"></i> Apply AI weaving &amp; update resume
+                        </button>
+                    </div>
+                </div>
+        </div>
+
+        </div><!-- /leftPanel -->
+
+        <div id="rightPanel" class="hidden">
+            <div id="rightPanelCard" class="bg-white rounded-2xl shadow-xl border border-slate-200 p-5 flex flex-col z-40 sticky top-6 h-[calc(100vh-3rem)]">
+                <div class="flex items-center justify-between mb-4 gap-3 shrink-0">
+                    <div class="flex items-center gap-2 min-w-0">
+                        <button id="btnUndo" type="button" title="Undo" disabled class="inline-flex items-center justify-center w-8 h-8 rounded-lg border border-slate-200 text-slate-400 hover:bg-slate-50 hover:text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors shrink-0">
+                            <i class="fas fa-rotate-left text-xs"></i>
+                        </button>
+                        <button id="btnRedo" type="button" title="Redo" disabled class="inline-flex items-center justify-center w-8 h-8 rounded-lg border border-slate-200 text-slate-400 hover:bg-slate-50 hover:text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors shrink-0">
+                            <i class="fas fa-rotate-right text-xs"></i>
+                        </button>
+                        <label id="previewLabel" class="text-xs font-bold text-slate-400 uppercase tracking-wide truncate">Live preview — click any text to edit</label>
+                    </div>
+                    <div class="flex gap-2 shrink-0">
+                        <button id="btnFitToTwoPages" class="hidden inline-flex items-center gap-2 bg-amber-500 text-white px-3.5 py-2 rounded-xl font-bold hover:bg-amber-600 shadow-sm transition-colors text-sm disabled:opacity-50" title="Tighten wording to fit 2 pages — keeps every bullet, section, and skill/keyword currently in the resume">
+                            <i class="fas fa-compress"></i> <span class="hidden md:inline">Fit to 2 pages</span>
+                        </button>
+                        <button id="btnDownloadSingle" class="inline-flex items-center gap-2 bg-emerald-600 text-white px-3.5 py-2 rounded-xl font-bold hover:bg-emerald-700 shadow-sm transition-colors text-sm disabled:opacity-50">
+                            <i class="fas fa-download"></i> DOCX
+                        </button>
+                        <button id="btnDownloadSinglePdf" class="inline-flex items-center gap-2 bg-red-600 text-white px-3.5 py-2 rounded-xl font-bold hover:bg-red-700 shadow-sm transition-colors text-sm disabled:opacity-50">
+                            <i class="fas fa-file-pdf"></i> PDF
+                        </button>
+                    </div>
+                </div>
+                <iframe id="editPreviewFrame" class="w-full flex-1 min-h-0 border border-slate-200 rounded-xl bg-white"></iframe>
+            </div>
+        </div>
+
+        </div><!-- /workspaceGrid -->
+
+        <div id="progressOverlay" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50">
+            <div class="bg-white p-7 rounded-2xl shadow-2xl max-w-sm w-full text-center pop-in">
+                <div class="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-600 flex items-center justify-center mb-4 shadow-lg shadow-indigo-600/25">
+                    <i class="fas fa-circle-notch fa-spin text-2xl text-white"></i>
+                </div>
+                <h3 class="text-base font-extrabold text-slate-900 mb-1">Processing your resume</h3>
+                <p id="progressText" class="text-sm text-slate-500 mb-4">Initializing AI...</p>
+                <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                    <div id="progressBar" class="bg-gradient-to-r from-indigo-600 to-violet-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- TOASTS (replaces alert() for non-blocking messages) ---
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str == null ? '' : str;
+            return div.innerHTML;
+        }
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const styles = {
+                success: { bg: 'bg-emerald-600', icon: 'fa-circle-check' },
+                error: { bg: 'bg-red-600', icon: 'fa-circle-exclamation' },
+                warning: { bg: 'bg-amber-500', icon: 'fa-triangle-exclamation' },
+                info: { bg: 'bg-slate-800', icon: 'fa-circle-info' },
+            };
+            const s = styles[type] || styles.info;
+            const toast = document.createElement('div');
+            toast.className = `toast-item pointer-events-auto ${s.bg} text-white text-sm font-semibold px-4 py-3 rounded-xl shadow-lg flex items-start gap-2.5 max-w-sm`;
+            toast.innerHTML = `<i class="fas ${s.icon} mt-0.5 shrink-0"></i><span class="flex-1 whitespace-pre-line">${escapeHtml(message)}</span>`;
+            container.appendChild(toast);
+            requestAnimationFrame(() => toast.classList.add('toast-in'));
+            const remove = () => {
+                toast.classList.remove('toast-in');
+                toast.classList.add('toast-out');
+                setTimeout(() => toast.remove(), 300);
+            };
+            const timer = setTimeout(remove, 5000);
+            toast.addEventListener('click', () => { clearTimeout(timer); remove(); });
+        }
+
+        // --- SPLIT VIEW (LIVE EDIT LAYOUT) ---
+        const pageWrapper = document.getElementById('pageWrapper');
+        const workspaceGrid = document.getElementById('workspaceGrid');
+        const rightPanel = document.getElementById('rightPanel');
+
+        // rightPanelCard is `sticky` (see its class list) rather than the manually
+        // JS-positioned `fixed` this used to be — sticky respects normal document
+        // flow until scrolled past, so it naturally sits below the page header at
+        // any viewport width instead of needing position/width recomputed on every
+        // resize (and never risks overlapping/blocking the header's own controls,
+        // which a flat `top: 1.5rem` fixed position did at some viewport widths).
+
+        function enterSplitView() {
+            pageWrapper.classList.remove('max-w-3xl');
+            pageWrapper.classList.add('max-w-[1500px]');
+            workspaceGrid.classList.remove('grid-cols-1');
+            workspaceGrid.classList.add('md:grid-cols-[480px_minmax(0,1fr)]');
+            rightPanel.classList.remove('hidden');
+            document.getElementById('insightsCard').classList.remove('hidden');
+            document.getElementById('rightPanelCard').classList.add('slide-in-right');
+        }
+
+        function exitSplitView() {
+            pageWrapper.classList.add('max-w-3xl');
+            pageWrapper.classList.remove('max-w-[1500px]');
+            workspaceGrid.classList.add('grid-cols-1');
+            workspaceGrid.classList.remove('md:grid-cols-[480px_minmax(0,1fr)]');
+            rightPanel.classList.add('hidden');
+            document.getElementById('rightPanelCard').classList.remove('slide-in-right');
+            document.getElementById('insightsCard').classList.add('hidden');
+            document.getElementById('keywordPanel').classList.add('hidden');
+        }
+
+        // --- FILE UPLOAD LOGIC ---
+        const dropZoneSingle = document.getElementById('dropZoneSingle');
+        const fileInputSingle = document.getElementById('fileInputSingle');
+        dropZoneSingle.onclick = () => fileInputSingle.click();
+        fileInputSingle.onchange = () => {
+            if (fileInputSingle.files[0]) {
+                document.getElementById('fileNameSingle').innerText = fileInputSingle.files[0].name;
+                document.getElementById('fileNameSingle').classList.add('text-indigo-600', 'font-bold');
+            }
+        };
+        ['dragenter', 'dragover'].forEach((evt) => {
+            dropZoneSingle.addEventListener(evt, (e) => { e.preventDefault(); dropZoneSingle.classList.add('drop-active'); });
+        });
+        ['dragleave', 'drop'].forEach((evt) => {
+            dropZoneSingle.addEventListener(evt, (e) => { e.preventDefault(); dropZoneSingle.classList.remove('drop-active'); });
+        });
+        dropZoneSingle.addEventListener('drop', (e) => {
+            if (e.dataTransfer.files[0]) {
+                fileInputSingle.files = e.dataTransfer.files;
+                fileInputSingle.onchange();
+            }
+        });
+
+        // --- JD FILE UPLOAD (extract text from .txt/.docx/.pdf) ---
+        async function handleJdFileUpload(fileInput, textareaId, statusId) {
+            const file = fileInput.files[0];
+            if (!file) return;
+
+            const statusEl = document.getElementById(statusId);
+            statusEl.classList.remove('hidden', 'text-red-600', 'text-emerald-600');
+            statusEl.classList.add('text-slate-500');
+            statusEl.innerText = 'Extracting text...';
+
+            const formData = new FormData();
+            formData.append('jd_file', file);
+
+            try {
+                const res = await fetch('/api/extract-jd-text', { method: 'POST', body: formData });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.detail || 'Failed to extract text');
+                }
+                const data = await res.json();
+                document.getElementById(textareaId).value = data.text;
+                statusEl.classList.remove('text-slate-500');
+                statusEl.classList.add('text-emerald-600');
+                statusEl.innerText = `Extracted from ${file.name}`;
+            } catch (err) {
+                statusEl.classList.remove('text-slate-500');
+                statusEl.classList.add('text-red-600');
+                statusEl.innerText = 'Error: ' + err.message;
+            } finally {
+                fileInput.value = '';
+            }
+        }
+
+        document.getElementById('jdFileSingle').onchange = (e) => handleJdFileUpload(e.target, 'jobDescriptionSingle', 'jdFileStatusSingle');
+
+        // --- INSTRUCTION PRESETS ---
+        const INSTRUCTION_PRESETS = [
+            { key: 'natural', label: 'Natural & Human-like', text: 'Write descriptions in a natural, human, conversational tone — avoid robotic or overly formal AI-sounding phrasing.' },
+            { key: 'keyword', label: 'Maximize Keyword Match', text: 'Prioritize including as many relevant keywords as possible, even if it makes the phrasing a bit denser.' },
+            { key: 'concise', label: 'Concise & Crisp', text: 'Keep every bullet point short and crisp — one line each, no long sentences.' },
+            { key: 'detailed', label: 'Detailed & Elaborate', text: 'Expand bullet points with more detail and context, elaborating on impact and outcomes where plausible.' },
+            { key: 'formal', label: 'Formal Tone', text: 'Use a formal, corporate, professional tone throughout.' },
+        ];
+        const selectedPresets = { single: new Set() };
+        const PRESET_INACTIVE_CLS = 'px-3 py-1.5 rounded-full border border-slate-200 text-xs font-semibold text-slate-600 hover:border-indigo-300 cursor-pointer transition-all';
+        const PRESET_ACTIVE_CLS = 'px-3 py-1.5 rounded-full border border-indigo-500 bg-indigo-50 text-xs font-semibold text-indigo-700 cursor-pointer transition-all';
+
+        document.querySelectorAll('.instruction-presets').forEach(container => {
+            const formName = container.dataset.form;
+            INSTRUCTION_PRESETS.forEach(preset => {
+                const chip = document.createElement('button');
+                chip.type = 'button';
+                chip.className = PRESET_INACTIVE_CLS;
+                chip.innerText = preset.label;
+                chip.onclick = () => {
+                    const set = selectedPresets[formName];
+                    if (set.has(preset.key)) {
+                        set.delete(preset.key);
+                        chip.className = PRESET_INACTIVE_CLS;
+                    } else {
+                        set.add(preset.key);
+                        chip.className = PRESET_ACTIVE_CLS;
+                    }
+                };
+                container.appendChild(chip);
+            });
+        });
+
+        function buildExtraInstructions(formName, customText) {
+            const parts = [...selectedPresets[formName]].map(key => INSTRUCTION_PRESETS.find(p => p.key === key).text);
+            if (customText) parts.push(customText);
+            return parts.join(' ');
+        }
+
+        // --- SUBMIT LOGIC ---
+        const progressOverlay = document.getElementById('progressOverlay');
+        const progressBar = document.getElementById('progressBar');
+        const progressText = document.getElementById('progressText');
+        let lastJobDescription = '';
+
+        // --- NOTHING IS KEPT: tell the server to delete this session's files when the user leaves ---
+        // The upload, preview and generated DOCX/PDF only exist while this page
+        // is open on them. sendBeacon still gets through while the tab is
+        // closing; the server also discards idle jobs on its own as a fallback.
+        function discardCurrentJob() {
+            const jobId = rightPanel.dataset.jobId;
+            if (!jobId) return;
+            delete rightPanel.dataset.jobId;
+            navigator.sendBeacon(`/api/discard-job/${jobId}`);
+        }
+        window.addEventListener('pagehide', discardCurrentJob);
+
+        // Downloads go through a temporary link rather than window.location,
+        // so starting a download is never mistaken for leaving the page.
+        function triggerDownload(url) {
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = '';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+        }
+
+        async function startConversion() {
+            if (!fileInputSingle.files[0]) { showToast('Select a file first.', 'warning'); return; }
+
+            discardCurrentJob();  // a new conversion replaces any previous one
+            startProcess();
+
+            const formData = new FormData();
+            formData.append("resume_file", fileInputSingle.files[0]);
+            formData.append("template_choice", document.querySelector('input[name="singleTemplate"]:checked').value);
+            const jdSingle = document.getElementById('jobDescriptionSingle').value.trim();
+            lastJobDescription = jdSingle;
+            if (jdSingle) formData.append("job_description", jdSingle);
+            const extraInstrSingle = buildExtraInstructions('single', document.getElementById('extraInstructionsSingle').value.trim());
+            if (extraInstrSingle) formData.append("extra_instructions", extraInstrSingle);
+
+            try {
+                const res = await fetch("/api/convert-resume", { method: "POST", body: formData });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok || !data.job_id) {
+                    endProcess(data.detail || `Upload failed (HTTP ${res.status})`);
+                    return;
+                }
+                rightPanel.dataset.jobId = data.job_id;  // known now, so leaving mid-extraction still discards it
+                pollStatus(data.job_id);
+            } catch (err) {
+                endProcess(err.message);
+            }
+        }
+
+        document.getElementById('singleForm').onsubmit = async (e) => {
+            e.preventDefault();
+            await startConversion();
+        };
+
+        // --- POLLING & UI HELPERS ---
+        function startProcess() {
+            progressOverlay.classList.remove('hidden');
+            progressBar.style.width = '0%';
+            progressText.innerText = 'Starting...';
+        }
+
+        function endProcess(errorMsg = null) {
+            progressOverlay.classList.add('hidden');
+            if (errorMsg) showToast('Error: ' + errorMsg, 'error');
+        }
+
+        async function pollStatus(jobId) {
+            const interval = setInterval(async () => {
+                try {
+                    const res = await fetch(`/api/job-status/${jobId}`);
+                    const data = await res.json();
+                    if (!res.ok) {
+                        clearInterval(interval);
+                        endProcess(data.detail || `Status check failed (HTTP ${res.status})`);
+                        return;
+                    }
+
+                    progressText.innerText = data.progress;
+                    progressBar.style.width = data.status === 'processing' ? '50%' : '10%';
+
+                    if (data.status === 'ready_for_edit') {
+                        clearInterval(interval);
+                        endProcess();
+                        await loadEditPreview(jobId);
+                    } else if (data.status === 'error') {
+                        clearInterval(interval);
+                        endProcess(data.error);
+                    }
+                } catch (e) {
+                    clearInterval(interval);
+                    endProcess("Connection lost");
+                }
+            }, 1000);
+        }
+
+        // --- UNDO / REDO HISTORY (full-HTML snapshots; per-file, reset whenever a new preview loads) ---
+        let historyStack = [];
+        let historyIndex = -1;
+        const btnUndo = document.getElementById('btnUndo');
+        const btnRedo = document.getElementById('btnRedo');
+
+        function updateUndoRedoButtons() {
+            btnUndo.disabled = historyIndex <= 0;
+            btnRedo.disabled = historyIndex >= historyStack.length - 1;
+        }
+
+        function wireFrameDocument(frame) {
+            try {
+                frame.contentDocument.body.contentEditable = "true";
+                frame.contentDocument.designMode = "on";
+                injectSectionEditorOverlay(frame.contentDocument);
+            } catch (e) { /* same-origin srcdoc, should not fail */ }
+        }
+
+        // Every place that reads the iframe's live HTML (to save/download/send to the AI,
+        // or to snapshot into undo history) must strip our OWN injected editor chrome first
+        // — otherwise it round-trips into the saved content, and the next document load
+        // already contains a "#__secEditorStyle" tag before injectSectionEditorOverlay even
+        // runs, so its already-injected guard bails out and hovering stops working for good
+        // after the first AI edit/add. Exposed on window so the injected iframe script (a
+        // different JS realm) can call it too.
+        window.__getCleanFrameHtml = function (frameDocument) {
+            const clone = frameDocument.documentElement.cloneNode(true);
+            clone.querySelectorAll(
+                '#__secEditorStyle, .__sec-overlay-box, .__sec-toolbar, .__sec-ai-popover, .__sec-add-btn, .__sec-add-row'
+            ).forEach((el) => el.remove());
+            clone.querySelectorAll('.__sec-editing-active').forEach((el) => {
+                el.classList.remove('__sec-editing-active');
+                el.removeAttribute('contenteditable');
+            });
+            clone.removeAttribute('contenteditable');
+            const body = clone.querySelector('body');
+            if (body) body.removeAttribute('contenteditable');
+            return "<!DOCTYPE html>\n" + clone.outerHTML;
+        };
+
+        // Loads html into the iframe without touching undo history — used for initial
+        // loads (paired with resetHistory) and for undo/redo navigation.
+        function setFrameContent(html) {
+            const frame = document.getElementById('editPreviewFrame');
+            frame.onload = () => wireFrameDocument(frame);
+            frame.srcdoc = html;
+        }
+
+        function resetHistory(html) {
+            historyStack = [html];
+            historyIndex = 0;
+            updateUndoRedoButtons();
+            setFrameContent(html);
+        }
+
+        window.__pushHistorySnapshot = function (html) {
+            historyStack = historyStack.slice(0, historyIndex + 1);
+            historyStack.push(html);
+            historyIndex = historyStack.length - 1;
+            updateUndoRedoButtons();
+        };
+
+        function undoEdit() {
+            if (historyIndex <= 0) return;
+            historyIndex--;
+            setFrameContent(historyStack[historyIndex]);
+            updateUndoRedoButtons();
+        }
+
+        function redoEdit() {
+            if (historyIndex >= historyStack.length - 1) return;
+            historyIndex++;
+            setFrameContent(historyStack[historyIndex]);
+            updateUndoRedoButtons();
+        }
+
+        btnUndo.onclick = undoEdit;
+        btnRedo.onclick = redoEdit;
+
+        // --- LIVE EDIT: SINGLE ---
+        const previewLabel = document.getElementById('previewLabel');
+
+        function showJdAndBack() {
+            document.getElementById('btnBackToForm').classList.remove('hidden');
+            const jdBox = document.getElementById('jdDisplayContainer');
+            if (lastJobDescription) {
+                document.getElementById('jdDisplayText').innerText = lastJobDescription;
+                jdBox.classList.remove('hidden');
+            } else {
+                jdBox.classList.add('hidden');
+            }
+        }
+
+        document.getElementById('btnBackToForm').onclick = () => {
+            discardCurrentJob();
+            document.getElementById('btnBackToForm').classList.add('hidden');
+            document.getElementById('jdDisplayContainer').classList.add('hidden');
+            document.getElementById('singleFormContainer').classList.remove('hidden');
+            exitSplitView();
+        };
+
+        async function loadEditPreview(jobId) {
+            const res = await fetch(`/api/preview/${jobId}`);
+            const html = await res.text();
+
+            rightPanel.dataset.jobId = jobId;
+
+            previewLabel.innerText = 'Live preview — click any text to edit, or hover a section for more options';
+            document.getElementById('btnDownloadSingle').classList.remove('hidden');
+            document.getElementById('btnDownloadSinglePdf').classList.remove('hidden');
+            document.getElementById('singleFormContainer').classList.add('hidden');
+            showJdAndBack();
+
+            resetHistory(html);
+            document.getElementById('btnFitToTwoPages').classList.add('hidden');
+
+            enterSplitView();
+            refreshKeywordPanel(jobId);
+        }
+
+        // --- SECTION HOVER OVERLAY: bounding box + Edit / Ask AI / Delete on any [data-section-id] block ---
+        function injectSectionEditorOverlay(frameDoc) {
+            if (frameDoc.getElementById('__secEditorStyle')) return;
+
+            const style = frameDoc.createElement('style');
+            style.id = '__secEditorStyle';
+            style.textContent = `
+                .__sec-overlay-box { position: fixed; border: 2px solid #6366f1; background: rgba(99,102,241,0.06);
+                    border-radius: 4px; pointer-events: none; z-index: 999998; display: none; }
+                .__sec-toolbar { position: fixed; display: none; gap: 4px; z-index: 999999; background: #1e293b;
+                    padding: 3px; border-radius: 8px; box-shadow: 0 4px 14px rgba(0,0,0,0.25); }
+                .__sec-toolbar button { font-family: 'Inter', Arial, sans-serif; font-size: 11px; font-weight: 600; border: none;
+                    border-radius: 5px; padding: 4px 9px; cursor: pointer; color: #fff; white-space: nowrap; }
+                .__sec-btn-edit { background: #4f46e5; } .__sec-btn-edit:hover { background: #4338ca; }
+                .__sec-btn-ai { background: #7c3aed; } .__sec-btn-ai:hover { background: #6d28d9; }
+                .__sec-btn-delete { background: #dc2626; } .__sec-btn-delete:hover { background: #b91c1c; }
+                .__sec-editing-active { outline: 2px dashed #4f46e5 !important; outline-offset: 2px; }
+                .__sec-ai-popover { position: fixed; display: none; z-index: 999999; background: #fff;
+                    border: 1px solid #e2e8f0; border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.18); padding: 10px; width: 280px; }
+                /* Inline mode: a normal flow child right after the section, instead of a
+                   fixed-position overlay — it then scrolls natively with the page, so there
+                   is nothing to keep synchronized during the (multi-second) AI request. */
+                .__sec-ai-popover.__sec-inline { position: static; display: block; margin: 6px 0 12px 0;
+                    border-left: 3px solid #7c3aed; box-shadow: 0 1px 4px rgba(0,0,0,0.12); }
+                .__sec-ai-popover textarea { width: 100%; box-sizing: border-box; font-family: 'Inter', Arial, sans-serif; font-size: 12px;
+                    border: 1px solid #e2e8f0; border-radius: 8px; padding: 7px; resize: none; height: 50px; }
+                .__sec-ai-row { display: flex; justify-content: flex-end; gap: 6px; margin-top: 6px; }
+                .__sec-ai-row button { font-family: 'Inter', Arial, sans-serif; font-size: 11px; font-weight: 600; border: none;
+                    border-radius: 6px; padding: 4px 10px; cursor: pointer; }
+                .__sec-ai-cancel { background: #f1f5f9; color: #111; }
+                .__sec-ai-submit { background: #7c3aed; color: #fff; } .__sec-ai-submit:disabled { opacity: 0.6; cursor: default; }
+                .__sec-add-btn { display: block; width: 100%; margin: 4px 0 12px 0; padding: 7px;
+                    background: #eef2ff; border: 1.5px dashed #a5b4fc; border-radius: 8px; color: #4338ca;
+                    font-family: 'Inter', Arial, sans-serif; font-size: 11.5px; font-weight: 700; cursor: pointer; text-align: center; }
+                .__sec-add-btn:hover { background: #e0e7ff; border-color: #6366f1; }
+            `;
+            frameDoc.head.appendChild(style);
+
+            const overlayBox = frameDoc.createElement('div');
+            overlayBox.className = '__sec-overlay-box';
+            frameDoc.body.appendChild(overlayBox);
+
+            const toolbar = frameDoc.createElement('div');
+            toolbar.className = '__sec-toolbar';
+            toolbar.innerHTML = `<button type="button" class="__sec-btn-edit">Edit</button>
+                <button type="button" class="__sec-btn-ai">AI Edit</button>
+                <button type="button" class="__sec-btn-delete">Delete</button>`;
+            frameDoc.body.appendChild(toolbar);
+
+            const popover = frameDoc.createElement('div');
+            popover.className = '__sec-ai-popover';
+            popover.innerHTML = `<textarea placeholder="e.g. Make this bullet mention AWS Lambda"></textarea>
+                <div class="__sec-ai-row">
+                    <button type="button" class="__sec-ai-cancel">Cancel</button>
+                    <button type="button" class="__sec-ai-submit">Apply</button>
+                </div>`;
+            frameDoc.body.appendChild(popover);
+
+            let currentSection = null;
+            let pinned = false; // true while the "Tell AI" popover is open
+
+            function positionBoxAndToolbar(el) {
+                const rect = el.getBoundingClientRect();
+                overlayBox.style.top = rect.top + 'px';
+                overlayBox.style.left = rect.left + 'px';
+                overlayBox.style.width = rect.width + 'px';
+                overlayBox.style.height = rect.height + 'px';
+                overlayBox.style.display = 'block';
+
+                toolbar.style.display = 'flex';
+                const toolbarWidth = toolbar.offsetWidth || 150;
+                let top = rect.top - 30;
+                if (top < 2) top = rect.top + 2;
+                let left = rect.right - toolbarWidth;
+                if (left < 2) left = 2;
+                toolbar.style.top = top + 'px';
+                toolbar.style.left = left + 'px';
+            }
+
+            function hideAll() {
+                if (pinned) return;
+                overlayBox.style.display = 'none';
+                toolbar.style.display = 'none';
+                currentSection = null;
+            }
+
+            // A short grace period before hiding avoids the overlay/toolbar vanishing
+            // out from under the cursor while it's crossing the small gap between the
+            // hovered section and the toolbar floating above it (which itself sits
+            // outside any [data-section-id] element) — without this, moving the mouse
+            // toward Edit/Tell AI/Delete could hide the toolbar before the click lands.
+            let hideTimer = null;
+            function scheduleHide() {
+                if (hideTimer) return;
+                hideTimer = setTimeout(() => { hideTimer = null; hideAll(); }, 250);
+            }
+            function cancelHide() {
+                if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
+            }
+
+            frameDoc.addEventListener('mousemove', (e) => {
+                if (pinned) return;
+                if (toolbar.contains(e.target) || popover.contains(e.target)) { cancelHide(); return; }
+                const target = e.target.closest && e.target.closest('[data-section-id]');
+                if (!target) { scheduleHide(); return; }
+                cancelHide();
+                if (target !== currentSection) {
+                    currentSection = target;
+                    positionBoxAndToolbar(target);
+                }
+            });
+            frameDoc.addEventListener('mouseleave', () => hideAll());
+
+            // Keep the box/toolbar glued to currentSection's live position every frame
+            // while just hovering (not pinned). This only needs to survive the few moments
+            // the mouse is actively moving over a section — once "Tell AI" is clicked, the
+            // floating chrome is hidden entirely (see below) in favor of an inline popover
+            // that needs no position syncing at all.
+            function syncOverlayPosition() {
+                if (!pinned && currentSection && currentSection.isConnected) {
+                    positionBoxAndToolbar(currentSection);
+                }
+                frameDoc.defaultView.requestAnimationFrame(syncOverlayPosition);
+            }
+            frameDoc.defaultView.requestAnimationFrame(syncOverlayPosition);
+
+            toolbar.querySelector('.__sec-btn-edit').addEventListener('click', () => {
+                if (!currentSection) return;
+                currentSection.contentEditable = 'true';
+                currentSection.classList.add('__sec-editing-active');
+                currentSection.focus();
+                const onBlur = () => {
+                    currentSection.classList.remove('__sec-editing-active');
+                    currentSection.removeEventListener('blur', onBlur);
+                };
+                currentSection.addEventListener('blur', onBlur);
+            });
+
+            toolbar.querySelector('.__sec-btn-delete').addEventListener('click', () => {
+                if (!currentSection) return;
+                if (!frameDoc.defaultView.confirm('Delete this section?')) return;
+                currentSection.remove();
+                hideAll();
+                // Deleting the last item in a group would otherwise leave a "+ Add" button
+                // pointing at a reference that no longer exists — recompute them fresh.
+                frameDoc.querySelectorAll('.__sec-add-row, .__sec-add-btn').forEach((btn) => btn.remove());
+                injectAddButtons(frameDoc);
+                window.parent.__pushHistorySnapshot(window.parent.__getCleanFrameHtml(frameDoc));
+            });
+
+            // Checkpoint free-text edits (typing anywhere via designMode) into undo
+            // history too, debounced so every keystroke doesn't create a new entry.
+            let inputDebounce = null;
+            frameDoc.addEventListener('input', () => {
+                if (inputDebounce) clearTimeout(inputDebounce);
+                inputDebounce = setTimeout(() => {
+                    inputDebounce = null;
+                    window.parent.__pushHistorySnapshot(window.parent.__getCleanFrameHtml(frameDoc));
+                }, 1200);
+            });
+
+            function closeInlinePopover() {
+                pinned = false;
+                popover.style.display = 'none';
+                popover.classList.remove('__sec-inline');
+                delete popover.dataset.mode;
+                delete popover.dataset.refId;
+                frameDoc.body.appendChild(popover); // park it back on body, detached from the section
+                hideAll();
+            }
+
+            function openInlinePopover(anchorEl, mode, refId, placeholder) {
+                pinned = true;
+                // Hide the floating box/toolbar and drop the popover into the document as a
+                // normal sibling right after the anchor — from here on it scrolls with the
+                // page like any other content, so it stays correctly placed no matter how
+                // long the AI request takes or how the user scrolls while waiting.
+                overlayBox.style.display = 'none';
+                toolbar.style.display = 'none';
+                popover.classList.add('__sec-inline');
+                popover.dataset.mode = mode;
+                popover.dataset.refId = refId;
+                anchorEl.insertAdjacentElement('afterend', popover);
+                popover.style.display = 'block';
+                const textarea = popover.querySelector('textarea');
+                textarea.placeholder = placeholder;
+                textarea.value = '';
+                textarea.focus();
+            }
+
+            toolbar.querySelector('.__sec-btn-ai').addEventListener('click', () => {
+                if (!currentSection) return;
+                openInlinePopover(currentSection, 'edit', currentSection.getAttribute('data-section-id'),
+                    'e.g. Make this bullet mention AWS Lambda');
+            });
+
+            // Delegated so it works for every "+ Add ..." button injected below, present or future.
+            frameDoc.body.addEventListener('click', (e) => {
+                const addBtn = e.target.closest && e.target.closest('.__sec-add-btn');
+                if (!addBtn || pinned) return;
+                openInlinePopover(addBtn, 'add', addBtn.dataset.refId,
+                    'Describe the new ' + addBtn.dataset.label + ' to add');
+            });
+
+            popover.querySelector('.__sec-ai-cancel').addEventListener('click', () => {
+                closeInlinePopover();
+            });
+
+            popover.querySelector('.__sec-ai-submit').addEventListener('click', async () => {
+                const textarea = popover.querySelector('textarea');
+                const instruction = textarea.value.trim();
+                if (!instruction) return;
+                const mode = popover.dataset.mode;
+                const refId = popover.dataset.refId;
+                const submitBtn = popover.querySelector('.__sec-ai-submit');
+                submitBtn.disabled = true;
+                submitBtn.innerText = mode === 'add' ? 'Adding...' : 'Applying...';
+                const ok = mode === 'add'
+                    ? await window.__handleSectionAdd(refId, instruction)
+                    : await window.__handleSectionAIEdit(refId, instruction);
+                if (!ok) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerText = 'Apply';
+                    closeInlinePopover();
+                }
+                // on success the frame is reloaded by the handler, tearing this document down
+            });
+
+            injectAddButtons(frameDoc);
+        }
+
+        // Human-friendly labels for known repeatable-group prefixes; anything else falls
+        // back to a title-cased version of the prefix itself.
+        const ADD_LABELS = {
+            work_experience: 'Experience', personal_projects: 'Project', skill: 'Skill',
+            certification: 'Certification', education: 'Education', project: 'Project',
+            expertise: 'Skill Category',
+        };
+        function labelForPrefix(prefix) {
+            return ADD_LABELS[prefix] || prefix.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        }
+
+        // Scans for data-section-id values ending in "_<number>" (e.g. work_experience_0,
+        // work_experience_1, ...), groups them by prefix, and appends a "+ Add X" button
+        // right after the last item in each group — plain fields (e.g. "field_database",
+        // no numeric suffix) are singular and correctly get no Add button.
+        function injectAddButtons(frameDoc) {
+            const groups = {};
+            frameDoc.querySelectorAll('[data-section-id]').forEach((el) => {
+                const id = el.getAttribute('data-section-id');
+                const m = id.match(/^(.+)_(\d+)$/);
+                if (!m) return;
+                (groups[m[1]] = groups[m[1]] || []).push(el);
+            });
+            Object.keys(groups).forEach((prefix) => {
+                const els = groups[prefix];
+                const last = els[els.length - 1];
+                const label = last.getAttribute('data-add-label') || labelForPrefix(prefix);
+                const btn = frameDoc.createElement('button');
+                btn.type = 'button';
+                btn.className = '__sec-add-btn';
+                btn.textContent = '+ Add ' + label;
+                btn.dataset.refId = last.getAttribute('data-section-id');
+                btn.dataset.label = label;
+                if (last.tagName === 'TR') {
+                    // Table templates: a bare <button> isn't valid inside <tbody>,
+                    // so give it its own full-width row.
+                    const row = frameDoc.createElement('tr');
+                    row.className = '__sec-add-row';
+                    const cell = frameDoc.createElement('td');
+                    cell.colSpan = last.children.length || 1;
+                    cell.style.border = 'none';
+                    cell.appendChild(btn);
+                    row.appendChild(cell);
+                    last.insertAdjacentElement('afterend', row);
+                } else {
+                    last.insertAdjacentElement('afterend', btn);
+                }
+            });
+        }
+        // Same warning shown at download time (see btnDownloadSingle/
+        // btnDownloadSinglePdf below), surfaced right after any live edit
+        // too — so growing the resume past 2 pages (even at the most
+        // compact layout) is visible immediately, not just discovered
+        // after downloading. Content is never dropped to force it back
+        // under 2 pages; this is purely an honest heads-up.
+        function showPageCountWarningIfNeeded(pageCount) {
+            const fitBtn = document.getElementById('btnFitToTwoPages');
+            fitBtn.classList.toggle('hidden', !(pageCount > 2));
+            if (pageCount > 2) {
+                showToast(`This resume is now ${pageCount} pages even at the most compact layout — consider trimming a role or project to fit 2 pages.`, 'warning');
+            }
+        }
+
+        window.__handleSectionAIEdit = async function (sectionId, instruction) {
+            const jobId = rightPanel.dataset.jobId;
+            const frame = document.getElementById('editPreviewFrame');
+            const editedHtml = window.__getCleanFrameHtml(frame.contentDocument);
+
+            const formData = new FormData();
+            formData.append('section_id', sectionId);
+            formData.append('instruction', instruction);
+            formData.append('edited_html', editedHtml);
+
+            try {
+                const res = await fetch(`/api/edit-section/${jobId}`, { method: 'POST', body: formData });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.detail || 'Failed to apply AI edit.');
+                }
+                const data = await res.json();
+                setFrameContent(data.html);
+                window.__pushHistorySnapshot(data.html);
+                showPageCountWarningIfNeeded(data.page_count);
+                return true;
+            } catch (err) {
+                showToast('AI edit failed: ' + err.message, 'error');
+                return false;
+            }
+        };
+
+        window.__handleSectionAdd = async function (referenceSectionId, instruction) {
+            const jobId = rightPanel.dataset.jobId;
+            const frame = document.getElementById('editPreviewFrame');
+            const editedHtml = window.__getCleanFrameHtml(frame.contentDocument);
+
+            const formData = new FormData();
+            formData.append('reference_section_id', referenceSectionId);
+            formData.append('instruction', instruction);
+            formData.append('edited_html', editedHtml);
+
+            try {
+                const res = await fetch(`/api/add-section/${jobId}`, { method: 'POST', body: formData });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.detail || 'Failed to add new entry.');
+                }
+                const data = await res.json();
+                setFrameContent(data.html);
+                window.__pushHistorySnapshot(data.html);
+                showPageCountWarningIfNeeded(data.page_count);
+                return true;
+            } catch (err) {
+                showToast('Add failed: ' + err.message, 'error');
+                return false;
+            }
+        };
+
+        const btnFitToTwoPages = document.getElementById('btnFitToTwoPages');
+        const btnFitToTwoPagesDefaultHtml = btnFitToTwoPages.innerHTML;
+
+        btnFitToTwoPages.onclick = async () => {
+            const jobId = rightPanel.dataset.jobId;
+            if (!jobId) return;
+
+            btnFitToTwoPages.disabled = true;
+            btnFitToTwoPages.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Tightening wording...';
+
+            try {
+                const res = await fetch(`/api/fit-to-2-pages/${jobId}`, { method: 'POST' });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.detail || 'Failed to fit resume to 2 pages.');
+                }
+                const data = await res.json();
+                setFrameContent(data.html);
+                window.__pushHistorySnapshot(data.html);
+
+                if (data.page_count > 2) {
+                    showPageCountWarningIfNeeded(data.page_count);
+                } else {
+                    document.getElementById('btnFitToTwoPages').classList.add('hidden');
+                    showToast('Resume tightened to fit 2 pages — every bullet, section, and skill kept.', 'success');
+                }
+            } catch (err) {
+                showToast('Error: ' + err.message, 'error');
+            } finally {
+                btnFitToTwoPages.disabled = false;
+                btnFitToTwoPages.innerHTML = btnFitToTwoPagesDefaultHtml;
+            }
+        };
+
+        const btnDownloadSingle = document.getElementById('btnDownloadSingle');
+        const btnDownloadSingleDefaultHtml = btnDownloadSingle.innerHTML;
+
+        btnDownloadSingle.onclick = async () => {
+            const jobId = rightPanel.dataset.jobId;
+            const frame = document.getElementById('editPreviewFrame');
+            const editedHtml = window.__getCleanFrameHtml(frame.contentDocument);
+
+            btnDownloadSingle.disabled = true;
+            btnDownloadSingle.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Preparing...';
+
+            const formData = new FormData();
+            formData.append("edited_html", editedHtml);
+
+            try {
+                await fetch(`/api/finalize-resume/${jobId}`, { method: "POST", body: formData });
+
+                const interval = setInterval(async () => {
+                    try {
+                        const res = await fetch(`/api/job-status/${jobId}`);
+                        const data = await res.json();
+
+                        if (data.status === 'completed') {
+                            clearInterval(interval);
+                            btnDownloadSingle.disabled = false;
+                            btnDownloadSingle.innerHTML = btnDownloadSingleDefaultHtml;
+                            const atsWarnings = (data.result && data.result.ats_warnings) || [];
+                            if (atsWarnings.length > 0) {
+                                const summary = atsWarnings.map(w => `• ${w.message}`).join('\n');
+                                showToast(`ATS parseability check found ${atsWarnings.length} potential issue(s) with this DOCX:\n\n${summary}`, 'warning');
+                            }
+                            if (data.result && data.result.page_count > 2) {
+                                showToast(`This resume is ${data.result.page_count} pages even at the most compact layout — consider trimming a role or project to fit 2 pages.`, 'warning');
+                            }
+                            triggerDownload(data.result.download_url);
+                        } else if (data.status === 'error') {
+                            clearInterval(interval);
+                            btnDownloadSingle.disabled = false;
+                            btnDownloadSingle.innerHTML = btnDownloadSingleDefaultHtml;
+                            showToast('Error: ' + data.error, 'error');
+                        }
+                    } catch (e) {
+                        clearInterval(interval);
+                        btnDownloadSingle.disabled = false;
+                        btnDownloadSingle.innerHTML = btnDownloadSingleDefaultHtml;
+                    }
+                }, 1000);
+            } catch (err) {
+                btnDownloadSingle.disabled = false;
+                btnDownloadSingle.innerHTML = btnDownloadSingleDefaultHtml;
+                showToast('Error: ' + err.message, 'error');
+            }
+        };
+
+        const btnDownloadSinglePdf = document.getElementById('btnDownloadSinglePdf');
+        const btnDownloadSinglePdfDefaultHtml = btnDownloadSinglePdf.innerHTML;
+
+        btnDownloadSinglePdf.onclick = async () => {
+            const jobId = rightPanel.dataset.jobId;
+            const frame = document.getElementById('editPreviewFrame');
+            const editedHtml = window.__getCleanFrameHtml(frame.contentDocument);
+
+            btnDownloadSinglePdf.disabled = true;
+            btnDownloadSinglePdf.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Preparing...';
+
+            const formData = new FormData();
+            formData.append("edited_html", editedHtml);
+
+            try {
+                await fetch(`/api/finalize-resume/${jobId}`, { method: "POST", body: formData });
+
+                const interval = setInterval(async () => {
+                    try {
+                        const res = await fetch(`/api/job-status/${jobId}`);
+                        const data = await res.json();
+
+                        if (data.status === 'completed') {
+                            clearInterval(interval);
+                            btnDownloadSinglePdf.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Converting...';
+                            if (data.result && data.result.page_count > 2) {
+                                showToast(`This resume is ${data.result.page_count} pages even at the most compact layout — consider trimming a role or project to fit 2 pages.`, 'warning');
+                            }
+                            triggerDownload(`/api/download-pdf/${jobId}`);
+                            setTimeout(() => {
+                                btnDownloadSinglePdf.disabled = false;
+                                btnDownloadSinglePdf.innerHTML = btnDownloadSinglePdfDefaultHtml;
+                            }, 1500);
+                        } else if (data.status === 'error') {
+                            clearInterval(interval);
+                            btnDownloadSinglePdf.disabled = false;
+                            btnDownloadSinglePdf.innerHTML = btnDownloadSinglePdfDefaultHtml;
+                            showToast('Error: ' + data.error, 'error');
+                        }
+                    } catch (e) {
+                        clearInterval(interval);
+                        btnDownloadSinglePdf.disabled = false;
+                        btnDownloadSinglePdf.innerHTML = btnDownloadSinglePdfDefaultHtml;
+                    }
+                }, 1000);
+            } catch (err) {
+                btnDownloadSinglePdf.disabled = false;
+                btnDownloadSinglePdf.innerHTML = btnDownloadSinglePdfDefaultHtml;
+                showToast('Error: ' + err.message, 'error');
+            }
+        };
+        // --- KEYWORD & ATS OPTIMIZATION PANEL ---
+        let kwPendingAdd = new Set();
+        let kwPendingRemove = new Set();
+        let kwCustomSkills = [];
+        let currentKeywordData = { added: [], missing: [], resume_skills: [], jd_keywords: [] };
+
+        // JD keywords come back from the backend as either plain strings or
+        // {"term": ..., "priority": "must-have"|"nice-to-have"} objects. Every
+        // other function in this panel (chip rendering, pending-change Sets,
+        // the apply-keywords request body) still wants plain term strings, so
+        // this is the one place that unpacks the shape — everything downstream
+        // stays untouched and just reads priority back out of the map below.
+        let currentKeywordPriority = new Map();
+
+        function _normalizeKeywordData(data) {
+            currentKeywordPriority = new Map();
+            const normalizeList = (list) => (list || []).map((kw) => {
+                if (typeof kw === 'string') return kw;
+                const term = kw.term;
+                if (kw.priority) currentKeywordPriority.set(term, kw.priority);
+                return term;
+            });
+            data.added = normalizeList(data.added);
+            data.missing = normalizeList(data.missing);
+            return data;
+        }
+
+        const QUICK_SKILL_SUGGESTIONS = [
+            "Python", "FastAPI", "Docker", "Kubernetes", "PostgreSQL",
+            "React", "TypeScript", "AWS", "Azure", "Node.js",
+            "Docker", "PyTorch", "REST APIs", "CI/CD",
+            "Git", "MongoDB", "Redis", "PyTorch", "GraphQL"
+        ];
+
+        // Tab Switching
+        const tabBtnMatched = document.getElementById('tabBtnMatched');
+        const tabBtnMissing = document.getElementById('tabBtnMissing');
+        const tabBtnCustom = document.getElementById('tabBtnCustom');
+        const tabBtnJd = document.getElementById('tabBtnJd');
+
+        const tabContentMatched = document.getElementById('tabContentMatched');
+        const tabContentMissing = document.getElementById('tabContentMissing');
+        const tabContentCustom = document.getElementById('tabContentCustom');
+        const tabContentJd = document.getElementById('tabContentJd');
+
+        function switchKeywordTab(tab) {
+            const tabs = [
+                { id: 'matched', btn: tabBtnMatched, content: tabContentMatched, activeCls: ['border-emerald-600', 'text-emerald-700'] },
+                { id: 'missing', btn: tabBtnMissing, content: tabContentMissing, activeCls: ['border-amber-500', 'text-amber-700'] },
+                { id: 'custom', btn: tabBtnCustom, content: tabContentCustom, activeCls: ['border-indigo-500', 'text-indigo-700'] },
+                { id: 'jd', btn: tabBtnJd, content: tabContentJd, activeCls: ['border-violet-600', 'text-violet-700'] },
+            ];
+
+            tabs.forEach(t => {
+                if (t.id === tab) {
+                    t.content.classList.remove('hidden');
+                    t.btn.classList.remove('border-transparent', 'text-slate-400');
+                    t.btn.classList.add(...t.activeCls);
+                } else {
+                    t.content.classList.add('hidden');
+                    t.btn.classList.remove('border-emerald-600', 'text-emerald-700', 'border-amber-500', 'text-amber-700', 'border-indigo-500', 'text-indigo-700', 'border-violet-600', 'text-violet-700');
+                    t.btn.classList.add('border-transparent', 'text-slate-400');
+                }
+            });
+        }
+
+        if (tabBtnMatched) tabBtnMatched.onclick = () => switchKeywordTab('matched');
+        if (tabBtnMissing) tabBtnMissing.onclick = () => switchKeywordTab('missing');
+        if (tabBtnCustom) tabBtnCustom.onclick = () => switchKeywordTab('custom');
+        if (tabBtnJd) tabBtnJd.onclick = () => switchKeywordTab('jd');
+
+        function priorityBadge(kw) {
+            return currentKeywordPriority.get(kw) === 'must-have'
+                ? '<span class="text-[9px] font-black uppercase tracking-wide bg-black/10 rounded px-1 py-0.5 ml-0.5">Required</span>'
+                : '';
+        }
+
+        function renderKeywordLists(addedKeywords, missingKeywords) {
+            const addedList = document.getElementById('kwAddedList');
+            const missingList = document.getElementById('kwMissingList');
+            addedList.innerHTML = '';
+            missingList.innerHTML = '';
+
+            // Missing must-haves are much more likely to be why a resume gets
+            // rejected than a missing nice-to-have — surface those first.
+            missingKeywords = [...missingKeywords].sort((a, b) => {
+                const rank = (kw) => (currentKeywordPriority.get(kw) === 'must-have' ? 0 : 1);
+                return rank(a) - rank(b);
+            });
+
+            document.getElementById('kwAddedCount').innerText = addedKeywords.length;
+            document.getElementById('kwMissingCount').innerText = missingKeywords.length;
+
+            // Render Included / Matched
+            if (addedKeywords.length === 0) {
+                addedList.innerHTML = `<div class="w-full text-center py-3 text-xs text-slate-400">No keywords detected yet. Add a skill or paste a JD!</div>`;
+            } else {
+                addedKeywords.forEach(kw => {
+                    const isMarkedDelete = kwPendingRemove.has(kw);
+                    const chip = document.createElement('div');
+                    chip.className = `inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border transition-all select-none cursor-pointer ${
+                        isMarkedDelete
+                            ? 'bg-red-100 border-red-400 text-red-700 line-through opacity-80'
+                            : 'bg-emerald-50 border-emerald-300 text-emerald-800 hover:border-emerald-500 hover:bg-emerald-100/70'
+                    }`;
+                    chip.title = isMarkedDelete ? 'Click to keep in resume' : 'Click to delete/remove from resume';
+                    chip.innerHTML = `
+                        <i class="fas ${isMarkedDelete ? 'fa-trash-arrow-up text-red-500' : 'fa-check-circle text-emerald-600'} text-[11px]"></i>
+                        <span>${escapeHtml(kw)}</span>${priorityBadge(kw)}
+                        <i class="fas ${isMarkedDelete ? 'fa-rotate-left text-red-600' : 'fa-times text-slate-400 hover:text-red-600'} text-[10px] ml-0.5"></i>
+                    `;
+                    chip.onclick = () => {
+                        if (kwPendingRemove.has(kw)) {
+                            kwPendingRemove.delete(kw);
+                        } else {
+                            kwPendingRemove.add(kw);
+                        }
+                        renderKeywordLists(addedKeywords, missingKeywords);
+                    };
+                    addedList.appendChild(chip);
+                });
+            }
+
+            // Render Missing (From JD)
+            if (missingKeywords.length === 0) {
+                missingList.innerHTML = `<div class="w-full text-center py-3 text-xs text-emerald-600"><i class="fas fa-check-double mr-1"></i> Great job! All JD keywords are in this resume.</div>`;
+            } else {
+                missingKeywords.forEach(kw => {
+                    const isMarkedAdd = kwPendingAdd.has(kw);
+                    const chip = document.createElement('div');
+                    chip.className = `inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border transition-all select-none cursor-pointer ${
+                        isMarkedAdd
+                            ? 'bg-emerald-100 border-emerald-400 text-emerald-800 font-bold'
+                            : 'bg-amber-50 border-amber-300 text-amber-900 hover:border-amber-500 hover:bg-amber-100/70'
+                    }`;
+                    chip.title = isMarkedAdd ? 'Click to cancel add' : 'Click to add to resume';
+                    chip.innerHTML = `
+                        <i class="fas ${isMarkedAdd ? 'fa-check-circle text-emerald-600' : 'fa-plus text-amber-600'} text-[11px]"></i>
+                        <span>${escapeHtml(kw)}</span>${priorityBadge(kw)}
+                    `;
+                    chip.onclick = () => {
+                        if (kwPendingAdd.has(kw)) {
+                            kwPendingAdd.delete(kw);
+                        } else {
+                            kwPendingAdd.add(kw);
+                        }
+                        renderKeywordLists(addedKeywords, missingKeywords);
+                    };
+                    missingList.appendChild(chip);
+                });
+            }
+
+            // Render ATS Score — weighted so a missing "must-have" costs more than
+            // a missing "nice-to-have" (a resume can match most keywords by count
+            // and still be missing the one thing that actually gets it rejected).
+            const total = addedKeywords.length + missingKeywords.length;
+            const weightOf = (kw) => (currentKeywordPriority.get(kw) === 'must-have' ? 2 : 1);
+            const addedWeight = addedKeywords.reduce((sum, kw) => sum + weightOf(kw), 0);
+            const totalWeight = addedWeight + missingKeywords.reduce((sum, kw) => sum + weightOf(kw), 0);
+            const scoreRatio = document.getElementById('kwScoreRatio');
+            const scoreBar = document.getElementById('kwScoreBar');
+            const matchPercent = document.getElementById('kwMatchPercent');
+            const matchBadge = document.getElementById('kwMatchBadge');
+
+            if (total > 0) {
+                const percent = Math.round((addedWeight / totalWeight) * 100);
+                matchPercent.innerText = `${percent}%`;
+                scoreRatio.innerText = `${addedKeywords.length} / ${total} matched`;
+                scoreBar.style.width = `${percent}%`;
+
+                if (percent >= 75) {
+                    scoreBar.className = 'bg-emerald-500 h-2 rounded-full transition-all duration-500';
+                    matchBadge.className = 'text-xs font-extrabold px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0';
+                } else if (percent >= 40) {
+                    scoreBar.className = 'bg-amber-500 h-2 rounded-full transition-all duration-500';
+                    matchBadge.className = 'text-xs font-extrabold px-3 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200 shrink-0';
+                } else {
+                    scoreBar.className = 'bg-red-500 h-2 rounded-full transition-all duration-500';
+                    matchBadge.className = 'text-xs font-extrabold px-3 py-1 rounded-full bg-red-50 text-red-700 border border-red-200 shrink-0';
+                }
+            } else {
+                matchPercent.innerText = `100%`;
+                scoreRatio.innerText = `${addedKeywords.length} skills listed`;
+                scoreBar.style.width = '100%';
+                scoreBar.className = 'bg-indigo-500 h-2 rounded-full transition-all duration-500';
+                matchBadge.className = 'text-xs font-extrabold px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 shrink-0';
+            }
+
+            renderQuickSuggestions(addedKeywords, missingKeywords);
+            updateMakeChangesVisibility();
+        }
+
+        function renderQuickSuggestions(addedKeywords, missingKeywords) {
+            const container = document.getElementById('kwSuggestions');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const addedLower = new Set(addedKeywords.map(k => k.toLowerCase()));
+            const customLower = new Set(kwCustomSkills.map(k => k.toLowerCase()));
+
+            const unadded = QUICK_SKILL_SUGGESTIONS.filter(
+                s => !addedLower.has(s.toLowerCase()) && !customLower.has(s.toLowerCase())
+            );
+
+            unadded.slice(0, 10).forEach(skill => {
+                const pill = document.createElement('button');
+                pill.type = 'button';
+                pill.className = 'inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-slate-100 text-slate-700 hover:bg-indigo-100 hover:text-indigo-700 transition-colors border border-slate-200';
+                pill.innerHTML = `<i class="fas fa-plus text-[9px]"></i> ${escapeHtml(skill)}`;
+                pill.onclick = () => {
+                    if (!kwCustomSkills.includes(skill)) {
+                        kwCustomSkills.push(skill);
+                        renderCustomSkillChips();
+                        renderQuickSuggestions(addedKeywords, missingKeywords);
+                        updateMakeChangesVisibility();
+                    }
+                };
+                container.appendChild(pill);
+            });
+        }
+
+        function renderCustomSkillChips() {
+            const list = document.getElementById('kwCustomList');
+            list.innerHTML = '';
+            if (kwCustomSkills.length === 0) {
+                list.innerHTML = '<span class="text-xs text-slate-400 italic">No custom skills queued yet. Type above or click suggestions!</span>';
+                return;
+            }
+            kwCustomSkills.forEach((skill, i) => {
+                const chip = document.createElement('span');
+                chip.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border bg-indigo-100 border-indigo-300 text-indigo-800';
+                chip.innerHTML = `<span>${escapeHtml(skill)}</span> <i class="fas fa-times cursor-pointer hover:text-red-600 ml-1"></i>`;
+                chip.querySelector('i').onclick = () => {
+                    kwCustomSkills.splice(i, 1);
+                    renderCustomSkillChips();
+                    if (currentKeywordData) renderQuickSuggestions(currentKeywordData.added, currentKeywordData.missing);
+                    updateMakeChangesVisibility();
+                };
+                list.appendChild(chip);
+            });
+        }
+
+        function updateMakeChangesVisibility() {
+            const btn = document.getElementById('btnMakeChanges');
+            const summary = document.getElementById('kwPendingSummary');
+            const pendingText = document.getElementById('kwPendingText');
+
+            const adds = kwPendingAdd.size + kwCustomSkills.length;
+            const removes = kwPendingRemove.size;
+            const totalChanges = adds + removes;
+
+            if (totalChanges > 0) {
+                btn.classList.remove('hidden');
+                summary.classList.remove('hidden');
+                let parts = [];
+                if (adds > 0) parts.push(`+${adds} keyword${adds > 1 ? 's' : ''} to add`);
+                if (removes > 0) parts.push(`−${removes} keyword${removes > 1 ? 's' : ''} to remove`);
+                pendingText.innerText = parts.join('  •  ');
+            } else {
+                btn.classList.add('hidden');
+                summary.classList.add('hidden');
+            }
+        }
+
+        document.getElementById('kwResetChangesBtn').onclick = () => {
+            kwPendingAdd.clear();
+            kwPendingRemove.clear();
+            kwCustomSkills = [];
+            renderCustomSkillChips();
+            if (currentKeywordData) {
+                renderKeywordLists(currentKeywordData.added, currentKeywordData.missing);
+            }
+            updateMakeChangesVisibility();
+        };
+
+        document.getElementById('kwAddAllMissingBtn').onclick = () => {
+            if (currentKeywordData && currentKeywordData.missing) {
+                currentKeywordData.missing.forEach(k => kwPendingAdd.add(k));
+                renderKeywordLists(currentKeywordData.added, currentKeywordData.missing);
+            }
+        };
+
+        async function refreshKeywordPanel(jobId) {
+            kwPendingAdd = new Set();
+            kwPendingRemove = new Set();
+            kwCustomSkills = [];
+            document.getElementById('kwCustomInput').value = '';
+            renderCustomSkillChips();
+
+            const panel = document.getElementById('keywordPanel');
+            panel.classList.remove('hidden');
+            panel.dataset.jobId = jobId;
+
+            try {
+                const res = await fetch(`/api/keyword-status/${jobId}`);
+                const data = await res.json();
+                currentKeywordData = _normalizeKeywordData(data);
+
+                if (data.job_description) {
+                    document.getElementById('kwJdTextarea').value = data.job_description;
+                }
+
+                renderKeywordLists(data.added || [], data.missing || []);
+
+                if (data.missing && data.missing.length > 0) {
+                    switchKeywordTab('missing');
+                } else {
+                    switchKeywordTab('matched');
+                }
+            } catch (e) {
+                console.error("Failed to load keywords:", e);
+            }
+        }
+
+        // Add custom keyword
+        document.getElementById('kwCustomAddBtn').onclick = () => {
+            const input = document.getElementById('kwCustomInput');
+            const val = input.value.trim();
+            if (val && !kwCustomSkills.includes(val)) {
+                kwCustomSkills.push(val);
+                input.value = '';
+                renderCustomSkillChips();
+                if (currentKeywordData) renderQuickSuggestions(currentKeywordData.added, currentKeywordData.missing);
+                updateMakeChangesVisibility();
+            }
+        };
+        document.getElementById('kwCustomInput').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                document.getElementById('kwCustomAddBtn').click();
+            }
+        });
+
+        // Analyze JD on the fly
+        document.getElementById('kwAnalyzeJdBtn').onclick = async () => {
+            const panel = document.getElementById('keywordPanel');
+            const jobId = panel.dataset.jobId;
+            const jdText = document.getElementById('kwJdTextarea').value.trim();
+
+            if (!jdText) {
+                showToast('Please paste a job description first.', 'warning');
+                return;
+            }
+
+            const btn = document.getElementById('kwAnalyzeJdBtn');
+            const oldHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Analyzing JD keywords...';
+
+            try {
+                const formData = new FormData();
+                formData.append('job_description', jdText);
+
+                const res = await fetch(`/api/analyze-jd-keywords/${jobId}`, {
+                    method: 'POST',
+                    body: formData
+                });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.detail || 'Failed to extract keywords from JD');
+                }
+                const data = await res.json();
+                currentKeywordData = _normalizeKeywordData(data);
+                renderKeywordLists(data.added || [], data.missing || []);
+                switchKeywordTab('missing');
+            } catch (err) {
+                showToast('Error: ' + err.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = oldHtml;
+            }
+        };
+
+        async function reloadPreviewFrame(jobId) {
+            const res = await fetch(`/api/preview/${jobId}`);
+            const html = await res.text();
+            resetHistory(html);
+        }
+
+        const btnMakeChanges = document.getElementById('btnMakeChanges');
+        const btnMakeChangesDefaultHtml = btnMakeChanges.innerHTML;
+
+        btnMakeChanges.onclick = async () => {
+            const panel = document.getElementById('keywordPanel');
+            const jobId = panel.dataset.jobId;
+
+            btnMakeChanges.disabled = true;
+            btnMakeChanges.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Weaving keywords with AI...';
+
+            try {
+                const formData = new FormData();
+                kwPendingAdd.forEach(k => formData.append('add_keywords', k));
+                kwPendingRemove.forEach(k => formData.append('remove_keywords', k));
+                kwCustomSkills.forEach(k => formData.append('custom_skills', k));
+
+                const res = await fetch(`/api/apply-keywords/${jobId}`, { method: 'POST', body: formData });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.detail || 'Failed to apply keyword changes');
+                }
+                const data = await res.json();
+
+                await reloadPreviewFrame(jobId);
+                await refreshKeywordPanel(jobId);
+                showToast('Resume updated with your keyword changes.', 'success');
+                showPageCountWarningIfNeeded(data.page_count);
+            } catch (err) {
+                showToast('Error: ' + err.message, 'error');
+            } finally {
+                btnMakeChanges.disabled = false;
+                btnMakeChanges.innerHTML = btnMakeChangesDefaultHtml;
+            }
+        };
+    </script>
+</body>
+</html>
