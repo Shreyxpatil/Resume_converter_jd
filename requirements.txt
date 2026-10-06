@@ -19,3 +19,7 @@ python-dotenv==1.2.4
 
 # PDF export on Windows uses Word via COM (Linux/macOS use LibreOffice instead)
 pywin32; sys_platform == 'win32'
+
+# Tests only (pytest tests/)
+pytest==9.1.1
+httpx==0.28.1
